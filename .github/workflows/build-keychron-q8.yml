@@ -1,0 +1,41 @@
+name: 00 build q8 firmware
+
+on:
+    push:
+        branches:
+            - master
+            - dcai
+        paths:
+            - "keyboards/keychron/q8/**"
+            - ".github/workflows/build-keychron-q8.yml"
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        container: qmkfm/qmk_cli
+
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 1
+                  persist-credentials: false
+
+            - name: check version
+              run: qmk --version
+
+            - name: setup
+              run: qmk setup -y
+
+            - name: run the build
+              run: |
+                  qmk compile -kb keychron/q8/ansi_encoder -km keychron
+                  mkdir firmware
+                  cp .build/*.hex ./firmware || true
+                  ls -l ./firmware
+
+            - name: publish keychron firmware
+              uses: actions/upload-artifact@v2
+              with:
+                  name: keychron-q8-firmware
+                  path: firmware
