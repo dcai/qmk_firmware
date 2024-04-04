@@ -1,0 +1,42 @@
+name: 00 keychron q60 max
+
+on:
+    push:
+        branches:
+            - wireless_playground
+            - master
+            - dcai
+        paths:
+            - "keyboards/keychron/q60_max/**"
+            - ".github/workflows/build-keychron*"
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        container: qmkfm/qmk_cli
+
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 1
+                  persist-credentials: false
+
+            - name: check version
+              run: qmk --version
+
+            - name: setup
+              run: qmk setup -y
+
+            - name: run the build
+              run: |
+                  qmk compile -kb keychron/q60_max/ansi -km via
+                  mkdir firmware
+                  find .build/ -regex '.*\.\(hex\|uf2\|bin\)$' -exec cp {} ./firmware
+                  ls -l ./firmware
+
+            - name: publish keychron firmware
+              uses: actions/upload-artifact@v2
+              with:
+                  name: keychron-firmware
+                  path: firmware
